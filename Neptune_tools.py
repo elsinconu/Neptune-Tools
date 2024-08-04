@@ -6,39 +6,73 @@ import requests
 from colorama import init, Fore
 import subprocess
 
-# Initialise colorama pour la coloration de la sortie dans la console
 init(autoreset=True)
 
 
-def run_update():
-    """Exécute le script de mise à jour et vérifie si une mise à jour est nécessaire."""
-    try:
-        result = subprocess.run([sys.executable, 'maj.py'], capture_output=True, text=True)
-        result.check_returncode()  # Vérifie si le script a retourné une erreur
-        print(result.stdout)
-        # Vérifie si la sortie du script indique qu'une mise à jour est nécessaire
-        return "Mise à jour nécessaire." in result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Erreur lors de l'exécution de maj.py : {e.stderr}")
+# URL du fichier version.txt sur GitHub
+GITHUB_VERSION_URL = 'https://raw.githubusercontent.com/elsinconu/Neptune-Tools/main/version.txt'
+# URL du fichier script.py mis à jour sur GitHub
+GITHUB_SCRIPT_URL = 'https://raw.githubusercontent.com/elsinconu/Neptune-Tools/main/test.py'
+# Nom du fichier version local
+LOCAL_VERSION_FILE = 'version.txt'
+# Nom du fichier script local
+LOCAL_SCRIPT_FILE = 'Neptune_tools.py'
+
+def get_remote_version(url):
+    """Obtenir la version distante depuis GitHub."""
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.text.strip()
+
+def download_file(url, file_path):
+    """Télécharger un fichier depuis une URL."""
+    response = requests.get(url)
+    response.raise_for_status()
+    with open(file_path, 'wb') as file:
+        file.write(response.content)
+
+def get_local_version(file_path):
+    """Obtenir la version locale depuis le fichier version.txt."""
+    if not os.path.exists(file_path):
+        return None
+    with open(file_path, 'r') as file:
+        return file.read().strip()
+
+def update_script():
+    """Vérifier et mettre à jour le script si une nouvelle version est disponible."""
+    remote_version = get_remote_version(GITHUB_VERSION_URL)
+    local_version = get_local_version(LOCAL_VERSION_FILE)
+
+    if local_version != remote_version:
+        print(Fore.YELLOW + "Mise à jour nécessaire.")
+        print("Téléchargement de la nouvelle version du script...")
+        download_file(GITHUB_SCRIPT_URL, LOCAL_SCRIPT_FILE)
+        with open(LOCAL_VERSION_FILE, 'w') as file:
+            file.write(remote_version)
+        print(Fore.GREEN + "Mise à jour terminée. Le script a été remplacé.")
+        return True
+    else:
+       
         return False
 
 def afficher_message_et_attendre():
-    """Affiche un message de mise à jour et attend avant de fermer le programme."""
-    print('Neptune Tools a été mis à jour. Veuillez redémarrer.')
+    """Afficher un message de mise à jour et attendre avant de fermer le programme."""
+    print(Fore.GREEN + 'Neptune Tools a été mis à jour. Veuillez redémarrer.')
     time.sleep(3)  # Attendre 3 secondes pour permettre à l'utilisateur de lire le message
-    print('Le programme va maintenant se fermer.')
+    print(Fore.RED + 'Le programme va maintenant se fermer.')
     time.sleep(1)  # Attendre 1 seconde avant la fermeture
 
-# Exécutez le script de mise à jour
-if run_update():
+# Initialise colorama pour la coloration de la sortie dans la console
+init(autoreset=True)
+
+# Exécutez la mise à jour et affichez un message avant de fermer le programme
+if update_script():
     afficher_message_et_attendre()
     sys.exit()  # Quitte le programme après avoir affiché le message
 
-# Continuez avec le reste du programme ici
-print("Début du script principal...")
+# Continuez avec le reste de votre code ici
 
-
-
+# Ajoutez le reste de votre code ici
 
 
 # Fonction pour nettoyer le répertoire temporaire de l'utilisateur
@@ -173,4 +207,5 @@ def main():
             clear_console()  # Efface la console avant de redemander l'entrée
 
 if __name__ == "__main__":
+    update_script()
     main()
