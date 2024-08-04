@@ -11,31 +11,34 @@ init(autoreset=True)
 
 
 def run_update():
-    result = subprocess.run([sys.executable, 'maj.py'], capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"Erreur lors de la mise à jour : {result.stderr}")
+    """Exécute le script de mise à jour et vérifie si une mise à jour est nécessaire."""
+    try:
+        result = subprocess.run([sys.executable, 'maj.py'], capture_output=True, text=True)
+        result.check_returncode()  # Vérifie si le script a retourné une erreur
+        print(result.stdout)
+        # Vérifie si la sortie du script indique qu'une mise à jour est nécessaire
+        return "Mise à jour nécessaire." in result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Erreur lors de l'exécution de maj.py : {e.stderr}")
         return False
-    print(result.stdout)
-    return "Mise à jour nécessaire." in result.stdout
 
-def restart_script():
-    """Redémarre le script principal."""
-    print("Redémarrage du script principal...")
-    os.execv(sys.executable, ['python'] + sys.argv)
+def afficher_message_et_attendre():
+    """Affiche un message de mise à jour et attend avant de fermer le programme."""
+    print('Neptune Tools a été mis à jour. Veuillez redémarrer.')
+    time.sleep(3)  # Attendre 3 secondes pour permettre à l'utilisateur de lire le message
+    print('Le programme va maintenant se fermer.')
+    time.sleep(1)  # Attendre 1 seconde avant la fermeture
 
 # Exécutez le script de mise à jour
-needs_update = run_update()
+if run_update():
+    afficher_message_et_attendre()
+    sys.exit()  # Quitte le programme après avoir affiché le message
 
-# Redémarrez le script principal si nécessaire
-if needs_update:
-    restart_script()
-else:
-    # Continuez avec le reste de votre code
-    print("Début du script principal...")
-    # Ajoutez le reste de votre code ici
+# Continuez avec le reste du programme ici
+print("Début du script principal...")
 
 
-    
+
 
 
 # Fonction pour nettoyer le répertoire temporaire de l'utilisateur
@@ -80,7 +83,11 @@ def display_large_loading_message():
  /      \ /  |                                                                                  /  |    
 /$$$$$$  |$$ |____    ______    ______    ______    ______   _____  ____    ______   _______   _$$ |_   
 $$ |  $$/ $$      \  /      \  /      \  /      \  /      \ /     \/    \  /      \ /       \ / $$   |  
-$$ |      $$$$$$$  | $$$$$$  |/$$$
+$$ |      $$$$$$$  | $$$$$$  |/$$$$$$  |/$$$$$$  |/$$$$$$  |$$$$$$ $$$$  |/$$$$$$  |$$$$$$$  |$$$$$$/   
+$$ |   __ $$ |  $$ | /    $$ |$$ |  $$/ $$ |  $$ |$$    $$ |$$ | $$ | $$ |$$    $$ |$$ |  $$ |  $$ | __ 
+$$ \__/  |$$ |  $$ |/$$$$$$$ |$$ |      $$ \__$$ |$$$$$$$$/ $$ | $$ | $$ |$$$$$$$$/ $$ |  $$ |  $$ |/  |
+$$    $$/ $$ |  $$ |$$    $$ |$$ |      $$    $$ |$$       |$$ | $$ | $$ |$$       |$$ |  $$ |  $$  $$/ 
+ $$$$$$/  $$/   $$/  $$$$$$$/ $$/        $$$$$$$ | $$$$$$$/ $$/  $$/  $$/  $$$$$$$/ $$/   $$/    $$$$/  
                                         /  \__$$ |                                                      
                                         $$    $$/                                                       
                                          $$$$$$/  
